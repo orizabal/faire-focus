@@ -3,10 +3,10 @@ package com.dropbox.focus
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ProjectDependency
-import org.gradle.api.artifacts.SelfResolvingDependency
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.kotlin.dsl.accessors.runtime.addExternalModuleDependencyTo
 import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault(because = "Not worth caching")
@@ -22,6 +22,12 @@ public abstract class CreateFocusSettingsTask : DefaultTask() {
   @TaskAction
   public fun createFocusSettings() {
     val dependencies = project.collectDependencies().sortedBy { it.path }
+    val tasks = project.tasks.map { it.path }
+//    val externalDependencies = project.configurations.forEach { config ->
+//      config.dependencies
+//        .filterIsInstance<ExternalModuleDependency>()
+//        .map { it.name }
+//    }
 
     settingsFile.get().asFile.writer().use { writer ->
       writer.write("// ${project.path} specific settings\n")
@@ -32,6 +38,10 @@ public abstract class CreateFocusSettingsTask : DefaultTask() {
       // Add the includes statements
       dependencies.forEach { dep ->
         writer.appendLine("include(\"${dep.path}\")")
+      }
+
+      tasks.forEach { task ->
+        writer.appendLine("include(\"${task}\")")
       }
 
       writer.appendLine()
